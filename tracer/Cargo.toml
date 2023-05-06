@@ -1,0 +1,6 @@
+[package]
+name = "collage_tracer"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+version.workspace = true

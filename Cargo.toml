@@ -2,6 +2,7 @@
 description = "Various experiments with interactive multimedia algorithms"
 members = [
   "math",
+  "tracer",
 ]
 
 [workspace.package]
