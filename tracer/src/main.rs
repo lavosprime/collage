@@ -19,6 +19,8 @@ fn main() -> std::io::Result<()> {
     )?;
 
     for row in (0..IMAGE_HEIGHT).rev() {
+        eprintln!("Scanlines remaining: {} of {}", row, IMAGE_HEIGHT);
+
         for col in 0..IMAGE_WIDTH {
             let r = col as f32 / (IMAGE_WIDTH - 1) as f32;
             let g = row as f32 / (IMAGE_HEIGHT - 1) as f32;
@@ -33,5 +35,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    out.flush()
+    out.flush()?;
+    eprintln!("Done");
+    Ok(())
 }
