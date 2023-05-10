@@ -42,6 +42,15 @@ impl Vec3f {
     }
 
     #[inline]
+    pub fn splat_map_left(
+        self,
+        scalar: f32,
+        f: impl Fn(f32, f32) -> f32,
+    ) -> Self {
+        Self::splat(scalar).zip_map(self, f)
+    }
+
+    #[inline]
     pub fn splat_map_assign(
         &mut self,
         scalar: f32,
@@ -184,6 +193,15 @@ macro_rules! splat_arithmetic {
     };
 }
 
+macro_rules! splat_arithmetic_left {
+    ($Vector:ty, $Scalar:ty, $op:ident) => {
+        #[inline]
+        fn $op(self, vector: $Vector) -> $Vector {
+            vector.splat_map_left(self, <$Scalar>::$op)
+        }
+    };
+}
+
 macro_rules! zip_arithmetic_assign {
     ($Scalar:ty, $op:ident, $op_assign:ident) => {
         #[inline]
@@ -221,6 +239,11 @@ macro_rules! impl_binary_op {
         impl $Trait<$Scalar> for $Vector {
             type Output = Self;
             splat_arithmetic!($Scalar, $op);
+        }
+
+        impl $Trait<$Vector> for $Scalar {
+            type Output = $Vector;
+            splat_arithmetic_left!($Vector, $Scalar, $op);
         }
 
         impl $TraitAssign for $Vector {
@@ -443,6 +466,42 @@ mod tests {
         let v3 = Vec3f::new(0.0, 0.0, 0.0);
         let result = v3 / 1.5;
         assert_eq!(result, Vec3f::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_scalar_addition_left() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+
+        let result1 = 2.0 + v1;
+        let expected_result1 = Vec3f::new(3.0, 4.0, 5.0);
+        assert_eq!(result1, expected_result1);
+    }
+
+    #[test]
+    fn test_scalar_subtraction_left() {
+        let v1 = Vec3f::new(4.0, 5.0, 6.0);
+
+        let result1 = 2.0 - v1;
+        let expected_result1 = Vec3f::new(-2.0, -3.0, -4.0);
+        assert_eq!(result1, expected_result1);
+    }
+
+    #[test]
+    fn test_scalar_multiplication_left() {
+        let v1 = Vec3f::new(2.0, 3.0, 4.0);
+
+        let result1 = 2.0 * v1;
+        let expected_result1 = Vec3f::new(4.0, 6.0, 8.0);
+        assert_eq!(result1, expected_result1);
+    }
+
+    #[test]
+    fn test_scalar_division_left() {
+        let v1 = Vec3f::new(6.0, 9.0, 12.0);
+
+        let result1 = 1.0 / v1;
+        let expected_result1 = Vec3f::new(1.0 / 6.0, 1.0 / 9.0, 1.0 / 12.0);
+        assert_eq!(result1, expected_result1);
     }
 
     #[test]
