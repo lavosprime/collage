@@ -27,8 +27,27 @@ impl Vec3f {
     }
 
     #[inline]
+    pub const fn splat(scalar: f32) -> Self {
+        Self { components: [scalar; 3] }
+    }
+
+    #[inline]
     pub fn map(self, f: impl Fn(f32) -> f32) -> Self {
         Self { components: self.components.map(f) }
+    }
+
+    #[inline]
+    pub fn splat_map(self, scalar: f32, f: impl Fn(f32, f32) -> f32) -> Self {
+        self.zip_map(Self::splat(scalar), f)
+    }
+
+    #[inline]
+    pub fn splat_map_assign(
+        &mut self,
+        scalar: f32,
+        f: impl Fn(f32, f32) -> f32,
+    ) {
+        self.zip_map_assign(Self::splat(scalar), f);
     }
 
     #[inline]
@@ -129,11 +148,29 @@ macro_rules! zip_arithmetic {
     };
 }
 
+macro_rules! splat_arithmetic {
+    ($Scalar:ty, $op:ident) => {
+        #[inline]
+        fn $op(self, scalar: $Scalar) -> Self {
+            self.splat_map(scalar, <$Scalar>::$op)
+        }
+    };
+}
+
 macro_rules! zip_arithmetic_assign {
     ($Scalar:ty, $op:ident, $op_assign:ident) => {
         #[inline]
         fn $op_assign(&mut self, other: Self) {
             self.zip_map_assign(other, <$Scalar>::$op)
+        }
+    };
+}
+
+macro_rules! splat_arithmetic_assign {
+    ($Scalar:ty, $op:ident, $op_assign:ident) => {
+        #[inline]
+        fn $op_assign(&mut self, scalar: $Scalar) {
+            self.splat_map_assign(scalar, <$Scalar>::$op)
         }
     };
 }
@@ -154,8 +191,17 @@ macro_rules! impl_binary_op {
             zip_arithmetic!($Scalar, $op);
         }
 
+        impl $Trait<$Scalar> for $Vector {
+            type Output = Self;
+            splat_arithmetic!($Scalar, $op);
+        }
+
         impl $TraitAssign for $Vector {
             zip_arithmetic_assign!($Scalar, $op, $op_assign);
+        }
+
+        impl $TraitAssign<$Scalar> for $Vector {
+            splat_arithmetic_assign!($Scalar, $op, $op_assign);
         }
     };
 }
@@ -164,7 +210,7 @@ impl_unary_op!(Vec3f, f32, Neg, neg);
 impl_binary_op!(Vec3f, f32, Add, AddAssign, add, add_assign);
 impl_binary_op!(Vec3f, f32, Sub, SubAssign, sub, sub_assign);
 impl_binary_op!(Vec3f, f32, Mul, MulAssign, mul, mul_assign);
-impl_binary_op!(Vec3f, f32, Div, DivAssign, div, div_assign);
+impl_binary_op!(Vec3f, f32, Div, DivAssign, div, div_assign); // TODO suboptimal for scalar
 
 #[cfg(test)]
 mod tests {
@@ -303,6 +349,66 @@ mod tests {
         let v3 = Vec3f::new(1.0, 1.0, 1.0);
         let result = v3 / Vec3f::new(2.0, 2.0, 2.0);
         assert_eq!(result, Vec3f::new(0.5, 0.5, 0.5));
+    }
+
+    #[test]
+    fn test_scalar_addition() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let result = v1 + 2.0;
+        assert_eq!(result, Vec3f::new(3.0, 4.0, 5.0));
+
+        let v2 = Vec3f::new(-1.5, 0.5, 2.0);
+        let result = v2 + 0.5;
+        assert_eq!(result, Vec3f::new(-1.0, 1.0, 2.5));
+
+        let v3 = Vec3f::new(0.0, 0.0, 0.0);
+        let result = v3 + 1.0;
+        assert_eq!(result, Vec3f::new(1.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn test_scalar_subtraction() {
+        let v1 = Vec3f::new(3.0, 4.0, 5.0);
+        let result = v1 - 2.0;
+        assert_eq!(result, Vec3f::new(1.0, 2.0, 3.0));
+
+        let v2 = Vec3f::new(-1.0, 1.0, 2.5);
+        let result = v2 - 0.5;
+        assert_eq!(result, Vec3f::new(-1.5, 0.5, 2.0));
+
+        let v3 = Vec3f::new(1.0, 1.0, 1.0);
+        let result = v3 - 1.0;
+        assert_eq!(result, Vec3f::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_scalar_multiplication() {
+        let v1 = Vec3f::new(2.0, 3.0, 4.0);
+        let result = v1 * 2.0;
+        assert_eq!(result, Vec3f::new(4.0, 6.0, 8.0));
+
+        let v2 = Vec3f::new(-1.5, 0.5, 2.0);
+        let result = v2 * 0.5;
+        assert_eq!(result, Vec3f::new(-0.75, 0.25, 1.0));
+
+        let v3 = Vec3f::new(0.0, 0.0, 0.0);
+        let result = v3 * 1.5;
+        assert_eq!(result, Vec3f::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_scalar_division() {
+        let v1 = Vec3f::new(4.0, 6.0, 8.0);
+        let result = v1 / 2.0;
+        assert_eq!(result, Vec3f::new(2.0, 3.0, 4.0));
+
+        let v2 = Vec3f::new(-1.5, 0.5, 2.0);
+        let result = v2 / 0.5;
+        assert_eq!(result, Vec3f::new(-3.0, 1.0, 4.0));
+
+        let v3 = Vec3f::new(0.0, 0.0, 0.0);
+        let result = v3 / 1.5;
+        assert_eq!(result, Vec3f::new(0.0, 0.0, 0.0));
     }
 
     #[test]
