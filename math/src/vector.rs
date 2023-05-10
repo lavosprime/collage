@@ -1,5 +1,6 @@
 use core::ops::Add;
 use core::ops::AddAssign;
+use core::ops::Neg;
 use core::ops::Sub;
 use core::ops::SubAssign;
 
@@ -7,6 +8,11 @@ use core::ops::SubAssign;
 pub struct Vec3f(pub [f32; 3]);
 
 impl Vec3f {
+    #[inline]
+    pub fn map(self, f: impl Fn(f32) -> f32) -> Self {
+        Self(self.0.map(f))
+    }
+
     #[inline]
     pub fn zip_map(self, other: Self, f: impl Fn(f32, f32) -> f32) -> Self {
         let (lhs, rhs) = (self.0, other.0);
@@ -33,6 +39,15 @@ impl Vec3f {
     }
 }
 
+macro_rules! map_arithmetic {
+    ($Scalar:ty, $op:ident) => {
+        #[inline]
+        fn $op(self) -> Self {
+            self.map(<$Scalar>::$op)
+        }
+    };
+}
+
 macro_rules! zip_arithmetic {
     ($Scalar:ty, $op:ident) => {
         #[inline]
@@ -51,6 +66,15 @@ macro_rules! zip_arithmetic_assign {
     };
 }
 
+macro_rules! impl_unary_op {
+    ($Vector:ty, $Scalar:ty, $Trait:ident, $op:ident) => {
+        impl $Trait for $Vector {
+            type Output = Self;
+            map_arithmetic!($Scalar, $op);
+        }
+    };
+}
+
 macro_rules! impl_binary_op {
     ($Vector:ty, $Scalar:ty, $Trait:ident, $TraitAssign:ident, $op:ident, $op_assign:ident) => {
         impl $Trait for $Vector {
@@ -64,6 +88,7 @@ macro_rules! impl_binary_op {
     };
 }
 
+impl_unary_op!(Vec3f, f32, Neg, neg);
 impl_binary_op!(Vec3f, f32, Add, AddAssign, add, add_assign);
 impl_binary_op!(Vec3f, f32, Sub, SubAssign, sub, sub_assign);
 
@@ -80,6 +105,9 @@ mod tests {
         assert_eq!(BASIS_K, BASIS_I.cross(BASIS_J));
         assert_eq!(BASIS_I, BASIS_J.cross(BASIS_K));
         assert_eq!(BASIS_J, BASIS_K.cross(BASIS_I));
+        assert_eq!(-BASIS_K, BASIS_J.cross(BASIS_I));
+        assert_eq!(-BASIS_I, BASIS_K.cross(BASIS_J));
+        assert_eq!(-BASIS_J, BASIS_I.cross(BASIS_K));
     }
 
     #[test]
