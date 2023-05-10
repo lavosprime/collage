@@ -53,6 +53,21 @@ impl Vec3f {
     }
 
     #[inline]
+    pub fn reduce(self, f: impl Fn(f32, f32) -> f32) -> f32 {
+        f(f(self.components[0], self.components[1]), self.components[2])
+    }
+
+    #[inline]
+    pub fn sum(self) -> f32 {
+        self.reduce(f32::add)
+    }
+
+    #[inline]
+    pub fn dot(self, other: Self) -> f32 {
+        self.mul(other).sum()
+    }
+
+    #[inline]
     pub fn cross(self, other: Self) -> Self {
         let (lhs, rhs) = (self.components, other.components);
         Self {
@@ -158,6 +173,16 @@ mod tests {
     const BASIS_0: Vec3f = Vec3f::BASIS_0;
     const BASIS_1: Vec3f = Vec3f::BASIS_1;
     const BASIS_2: Vec3f = Vec3f::BASIS_2;
+
+    #[test]
+    fn basis_dot_products_zero() {
+        assert_eq!(0.0f32, BASIS_0.dot(BASIS_1));
+        assert_eq!(0.0f32, BASIS_0.dot(BASIS_2));
+        assert_eq!(0.0f32, BASIS_1.dot(BASIS_0));
+        assert_eq!(0.0f32, BASIS_1.dot(BASIS_2));
+        assert_eq!(0.0f32, BASIS_2.dot(BASIS_0));
+        assert_eq!(0.0f32, BASIS_2.dot(BASIS_1));
+    }
 
     #[test]
     fn basis_cross_products_each_other() {
@@ -278,6 +303,17 @@ mod tests {
         let v3 = Vec3f::new(1.0, 1.0, 1.0);
         let result = v3 / Vec3f::new(2.0, 2.0, 2.0);
         assert_eq!(result, Vec3f::new(0.5, 0.5, 0.5));
+    }
+
+    #[test]
+    fn test_dot_product() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let v2 = Vec3f::new(4.0, 5.0, 6.0);
+
+        let result = v1.dot(v2);
+        let expected_result = 32.0;
+
+        assert_eq!(result, expected_result);
     }
 
     #[test]
