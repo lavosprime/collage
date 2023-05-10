@@ -1,7 +1,11 @@
 use core::ops::Add;
 use core::ops::AddAssign;
+use core::ops::Div;
+use core::ops::DivAssign;
 use core::ops::Index;
 use core::ops::IndexMut;
+use core::ops::Mul;
+use core::ops::MulAssign;
 use core::ops::Neg;
 use core::ops::Sub;
 use core::ops::SubAssign;
@@ -143,6 +147,8 @@ macro_rules! impl_binary_op {
 impl_unary_op!(Vec3f, f32, Neg, neg);
 impl_binary_op!(Vec3f, f32, Add, AddAssign, add, add_assign);
 impl_binary_op!(Vec3f, f32, Sub, SubAssign, sub, sub_assign);
+impl_binary_op!(Vec3f, f32, Mul, MulAssign, mul, mul_assign);
+impl_binary_op!(Vec3f, f32, Div, DivAssign, div, div_assign);
 
 #[cfg(test)]
 mod tests {
@@ -241,6 +247,36 @@ mod tests {
         let expected_result = Vec3f::new(3.0, 3.0, 3.0);
 
         assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn test_componentwise_multiplication() {
+        let v1 = Vec3f::new(2.0, 3.0, 4.0);
+        let result = v1 * Vec3f::new(2.0, 2.0, 2.0);
+        assert_eq!(result, Vec3f::new(4.0, 6.0, 8.0));
+
+        let v2 = Vec3f::new(-1.5, 0.5, 2.0);
+        let result = v2 * Vec3f::new(0.5, 2.0, -1.0);
+        assert_eq!(result, Vec3f::new(-0.75, 1.0, -2.0));
+
+        let v3 = Vec3f::new(1.0, 1.0, 1.0);
+        let result = v3 * Vec3f::new(0.0, 0.0, 0.0);
+        assert_eq!(result, Vec3f::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_componentwise_division() {
+        let v1 = Vec3f::new(4.0, 6.0, 8.0);
+        let result = v1 / Vec3f::new(2.0, 2.0, 2.0);
+        assert_eq!(result, Vec3f::new(2.0, 3.0, 4.0));
+
+        let v2 = Vec3f::new(-0.75, 1.0, -2.0);
+        let result = v2 / Vec3f::new(0.5, 2.0, -1.0);
+        assert_eq!(result, Vec3f::new(-1.5, 0.5, 2.0));
+
+        let v3 = Vec3f::new(1.0, 1.0, 1.0);
+        let result = v3 / Vec3f::new(2.0, 2.0, 2.0);
+        assert_eq!(result, Vec3f::new(0.5, 0.5, 0.5));
     }
 
     #[test]
