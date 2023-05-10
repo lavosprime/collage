@@ -87,6 +87,21 @@ impl Vec3f {
     }
 
     #[inline]
+    pub fn length_squared(self) -> f32 {
+        self.dot(self)
+    }
+
+    #[inline]
+    pub fn length(self) -> f32 {
+        self.length_squared().sqrt()
+    }
+
+    #[inline]
+    pub fn normalized(self) -> Self {
+        self * (1.0f32 / self.length())
+    }
+
+    #[inline]
     pub fn cross(self, other: Self) -> Self {
         let (lhs, rhs) = (self.components, other.components);
         Self {
@@ -96,6 +111,18 @@ impl Vec3f {
                 lhs[0] * rhs[1] - lhs[1] * rhs[0],
             ],
         }
+    }
+
+    #[inline]
+    pub fn approx_eq(self, other: Self) -> bool {
+        /*
+        Originally based on whichever gets the ChatGPT tests for `normalized()` to pass.
+        Retroactively justified as two ULPs per dimension, using the number of dimensions as an
+        exponent rather than a coefficient.
+        TODO(lavosprime): should this be an argument? an associated constant? both?
+        */
+        const EPSILON: f32 = f32::EPSILON * 8_f32;
+        self.sub(other).map(f32::abs).sum() < EPSILON
     }
 }
 
@@ -219,6 +246,13 @@ mod tests {
     const BASIS_0: Vec3f = Vec3f::BASIS_0;
     const BASIS_1: Vec3f = Vec3f::BASIS_1;
     const BASIS_2: Vec3f = Vec3f::BASIS_2;
+
+    #[test]
+    fn basis_lengths_one() {
+        assert_eq!(1.0f32, BASIS_0.length());
+        assert_eq!(1.0f32, BASIS_1.length());
+        assert_eq!(1.0f32, BASIS_2.length());
+    }
 
     #[test]
     fn basis_dot_products_zero() {
@@ -409,6 +443,57 @@ mod tests {
         let v3 = Vec3f::new(0.0, 0.0, 0.0);
         let result = v3 / 1.5;
         assert_eq!(result, Vec3f::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_approx_eq_equal() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let v2 = Vec3f::new(1.0, 2.0, 3.0);
+
+        assert!(v1.approx_eq(v2));
+    }
+
+    #[test]
+    fn test_approx_eq_epsilon() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let v2 = Vec3f::new(1.0000001, 2.0000002, 3.0000003);
+
+        assert!(v1.approx_eq(v2));
+    }
+
+    #[test]
+    fn test_approx_eq_not_equal() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let v2 = Vec3f::new(4.0, 5.0, 6.0);
+
+        assert!(!v1.approx_eq(v2));
+    }
+
+    #[test]
+    fn test_vector_length() {
+        let v1 = Vec3f::new(3.0, 4.0, 0.0);
+        let v2 = Vec3f::new(-2.0, 2.0, 2.0);
+
+        let length_v1 = v1.length();
+        let length_v2 = v2.length();
+
+        assert_eq!(length_v1, 5.0);
+        assert_eq!(length_v2, (12.0_f32).sqrt());
+    }
+
+    #[test]
+    fn test_vector_normalization() {
+        let v1 = Vec3f::new(3.0, 4.0, 0.0);
+        let v2 = Vec3f::new(-2.0, 2.0, 2.0);
+
+        let normalized_v1 = v1.normalized();
+        let normalized_v2 = v2.normalized();
+
+        let expected_normalized_v1 = Vec3f::new(0.6, 0.8, 0.0);
+        let expected_normalized_v2 = Vec3f::new(-0.57735, 0.57735, 0.57735);
+
+        assert!(normalized_v1.approx_eq(expected_normalized_v1));
+        assert!(normalized_v2.approx_eq(expected_normalized_v2));
     }
 
     #[test]
