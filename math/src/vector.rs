@@ -33,37 +33,39 @@ impl Vec3f {
     }
 }
 
-impl Add for Vec3f {
-    type Output = Self;
-
-    #[inline]
-    fn add(&self, other: Self) -> Self {
-        self.zip_map(f32::add)
-    }
+macro_rules! zip_arithmetic {
+    ($Scalar:ty, $op:ident) => {
+        #[inline]
+        fn $op(self, other: Self) -> Self {
+            self.zip_map(other, <$Scalar>::$op)
+        }
+    };
 }
 
-impl AddAssign for Vec3f {
-    #[inline]
-    fn add_assign(&mut self, other: Self) {
-        self.zip_map_assign(f32::add)
-    }
+macro_rules! zip_arithmetic_assign {
+    ($Scalar:ty, $op:ident, $op_assign:ident) => {
+        #[inline]
+        fn $op_assign(&mut self, other: Self) {
+            self.zip_map_assign(other, <$Scalar>::$op)
+        }
+    };
 }
 
-impl Sub for Vec3f {
-    type Output = Self;
+macro_rules! impl_binary_op {
+    ($Vector:ty, $Scalar:ty, $Trait:ident, $TraitAssign:ident, $op:ident, $op_assign:ident) => {
+        impl $Trait for $Vector {
+            type Output = Self;
+            zip_arithmetic!($Scalar, $op);
+        }
 
-    #[inline]
-    fn sub(&self, other: Self) -> Self {
-        self.zip_map(f32::sub)
-    }
+        impl $TraitAssign for $Vector {
+            zip_arithmetic_assign!($Scalar, $op, $op_assign);
+        }
+    };
 }
 
-impl SubAssign for Vec3f {
-    #[inline]
-    fn sub_assign(&mut self, other: Self) {
-        self.zip_map_assign(f32::sub)
-    }
-}
+impl_binary_op!(Vec3f, f32, Add, AddAssign, add, add_assign);
+impl_binary_op!(Vec3f, f32, Sub, SubAssign, sub, sub_assign);
 
 #[cfg(test)]
 mod tests {
