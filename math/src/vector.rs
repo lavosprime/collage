@@ -72,6 +72,7 @@ impl From<[f32; 3]> for Vec3f {
     }
 }
 
+#[allow(clippy::from_over_into)] // for inlining
 impl Into<[f32; 3]> for Vec3f {
     #[inline]
     fn into(self) -> [f32; 3] {

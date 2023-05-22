@@ -2,7 +2,7 @@
 
 use std::io::prelude::*;
 
-const PPM_MAGIC: &'static str = "P3";
+const PPM_MAGIC: &str = "P3";
 
 const IMAGE_WIDTH: u32 = u8::MAX as u32 + 1;
 const IMAGE_HEIGHT: u32 = u8::MAX as u32 + 1;
