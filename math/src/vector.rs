@@ -180,6 +180,38 @@ mod tests {
     //
 
     #[test]
+    fn test_from_into() {
+        let array: [f32; 3] = [1.0, 2.0, 3.0];
+
+        let vector: Vec3f = Vec3f::from(array);
+        let converted_array: [f32; 3] = vector.into();
+
+        assert_eq!(array, converted_array);
+    }
+
+    #[test]
+    fn test_index() {
+        let vector = Vec3f::new(1.0, 2.0, 3.0);
+
+        assert_eq!(vector[0], 1.0);
+        assert_eq!(vector[1], 2.0);
+        assert_eq!(vector[2], 3.0);
+    }
+
+    #[test]
+    fn test_index_mut() {
+        let mut vector = Vec3f::new(1.0, 2.0, 3.0);
+
+        vector[0] = 4.0;
+        vector[1] = 5.0;
+        vector[2] = 6.0;
+
+        assert_eq!(vector[0], 4.0);
+        assert_eq!(vector[1], 5.0);
+        assert_eq!(vector[2], 6.0);
+    }
+
+    #[test]
     fn test_unary_negation() {
         let v1 = Vec3f::new(1.0, 2.0, 3.0);
 
