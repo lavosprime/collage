@@ -174,4 +174,59 @@ mod tests {
         c += a;
         assert_eq!(c, b);
     }
+
+    //
+    // Here be ChatGPT lol
+    //
+
+    #[test]
+    fn test_unary_negation() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+
+        let result = -v1;
+        let expected_result = Vec3f::new(-1.0, -2.0, -3.0);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn test_componentwise_addition() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let v2 = Vec3f::new(4.0, 5.0, 6.0);
+
+        let result = v1 + v2;
+        let expected_result = Vec3f::new(5.0, 7.0, 9.0);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn test_componentwise_subtraction() {
+        let v1 = Vec3f::new(4.0, 5.0, 6.0);
+        let v2 = Vec3f::new(1.0, 2.0, 3.0);
+
+        let result = v1 - v2;
+        let expected_result = Vec3f::new(3.0, 3.0, 3.0);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn test_cross_product() {
+        let v1 = Vec3f::new(1.0, 2.0, 3.0);
+        let v2 = Vec3f::new(4.0, 5.0, 6.0);
+
+        let cross_product1 = v1.cross(v2);
+        let expected_cross_product1 = Vec3f::new(-3.0, 6.0, -3.0);
+
+        assert_eq!(cross_product1, expected_cross_product1);
+
+        let v3 = Vec3f::new(-2.0, 3.0, -1.0);
+        let v4 = Vec3f::new(4.0, -1.0, 5.0);
+
+        let cross_product2 = v3.cross(v4);
+        let expected_cross_product2 = Vec3f::new(14.0, 6.0, -10.0);
+
+        assert_eq!(cross_product2, expected_cross_product2);
+    }
 }
