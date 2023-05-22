@@ -1,22 +1,42 @@
 use core::ops::Add;
 use core::ops::AddAssign;
+use core::ops::Index;
+use core::ops::IndexMut;
 use core::ops::Neg;
 use core::ops::Sub;
 use core::ops::SubAssign;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct Vec3f(pub [f32; 3]);
+pub struct Vec3f {
+    components: [f32; 3],
+}
 
 impl Vec3f {
+    pub const BASIS_0: Self = Self::new(1.0, 0.0, 0.0);
+    pub const BASIS_1: Self = Self::new(0.0, 1.0, 0.0);
+    pub const BASIS_2: Self = Self::new(0.0, 0.0, 1.0);
+
+    // Argument names abbreviated from `component_0` etc due to noise in IDE parameter name hints.
+    #[inline]
+    pub const fn new(c0: f32, c1: f32, c2: f32) -> Self {
+        Self { components: [c0, c1, c2] }
+    }
+
     #[inline]
     pub fn map(self, f: impl Fn(f32) -> f32) -> Self {
-        Self(self.0.map(f))
+        Self { components: self.components.map(f) }
     }
 
     #[inline]
     pub fn zip_map(self, other: Self, f: impl Fn(f32, f32) -> f32) -> Self {
-        let (lhs, rhs) = (self.0, other.0);
-        Self([f(lhs[0], rhs[0]), f(lhs[1], rhs[1]), f(lhs[2], rhs[2])])
+        let (lhs, rhs) = (self.components, other.components);
+        Self {
+            components: [
+                f(lhs[0], rhs[0]),
+                f(lhs[1], rhs[1]),
+                f(lhs[2], rhs[2]),
+            ],
+        }
     }
 
     #[inline]
@@ -30,12 +50,44 @@ impl Vec3f {
 
     #[inline]
     pub fn cross(self, other: Self) -> Self {
-        let (lhs, rhs) = (self.0, other.0);
-        Self([
-            lhs[1] * rhs[2] - lhs[2] * rhs[1],
-            lhs[2] * rhs[0] - lhs[0] * rhs[2],
-            lhs[0] * rhs[1] - lhs[1] * rhs[0],
-        ])
+        let (lhs, rhs) = (self.components, other.components);
+        Self {
+            components: [
+                lhs[1] * rhs[2] - lhs[2] * rhs[1],
+                lhs[2] * rhs[0] - lhs[0] * rhs[2],
+                lhs[0] * rhs[1] - lhs[1] * rhs[0],
+            ],
+        }
+    }
+}
+
+impl From<[f32; 3]> for Vec3f {
+    #[inline]
+    fn from(components: [f32; 3]) -> Self {
+        Vec3f { components }
+    }
+}
+
+impl Into<[f32; 3]> for Vec3f {
+    #[inline]
+    fn into(self) -> [f32; 3] {
+        self.components
+    }
+}
+
+impl Index<usize> for Vec3f {
+    type Output = f32;
+
+    #[inline]
+    fn index(&self, i: usize) -> &Self::Output {
+        self.components.index(i)
+    }
+}
+
+impl IndexMut<usize> for Vec3f {
+    #[inline]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        self.components.index_mut(i)
     }
 }
 
@@ -96,28 +148,28 @@ impl_binary_op!(Vec3f, f32, Sub, SubAssign, sub, sub_assign);
 mod tests {
     use super::Vec3f;
 
-    const BASIS_I: Vec3f = Vec3f([1.0f32, 0.0f32, 0.0f32]);
-    const BASIS_J: Vec3f = Vec3f([0.0f32, 1.0f32, 0.0f32]);
-    const BASIS_K: Vec3f = Vec3f([0.0f32, 0.0f32, 1.0f32]);
+    const BASIS_0: Vec3f = Vec3f::BASIS_0;
+    const BASIS_1: Vec3f = Vec3f::BASIS_1;
+    const BASIS_2: Vec3f = Vec3f::BASIS_2;
 
     #[test]
     fn basis_cross_products_each_other() {
-        assert_eq!(BASIS_K, BASIS_I.cross(BASIS_J));
-        assert_eq!(BASIS_I, BASIS_J.cross(BASIS_K));
-        assert_eq!(BASIS_J, BASIS_K.cross(BASIS_I));
-        assert_eq!(-BASIS_K, BASIS_J.cross(BASIS_I));
-        assert_eq!(-BASIS_I, BASIS_K.cross(BASIS_J));
-        assert_eq!(-BASIS_J, BASIS_I.cross(BASIS_K));
+        assert_eq!(BASIS_2, BASIS_0.cross(BASIS_1));
+        assert_eq!(BASIS_0, BASIS_1.cross(BASIS_2));
+        assert_eq!(BASIS_1, BASIS_2.cross(BASIS_0));
+        assert_eq!(-BASIS_2, BASIS_1.cross(BASIS_0));
+        assert_eq!(-BASIS_0, BASIS_2.cross(BASIS_1));
+        assert_eq!(-BASIS_1, BASIS_0.cross(BASIS_2));
     }
 
     #[test]
     fn add_sub_basics() {
-        let a = Vec3f([1.0f32, 2.0f32, 3.0f32]);
-        let b = Vec3f([4.0f32, 5.0f32, 6.0f32]);
-        assert_eq!(a + b, Vec3f([5.0f32, 7.0f32, 9.0f32]));
+        let a = Vec3f::new(1.0f32, 2.0f32, 3.0f32);
+        let b = Vec3f::new(4.0f32, 5.0f32, 6.0f32);
+        assert_eq!(a + b, Vec3f::new(5.0f32, 7.0f32, 9.0f32));
         let mut c = b;
         c -= a;
-        assert_eq!(c, Vec3f([3.0f32, 3.0f32, 3.0f32]));
+        assert_eq!(c, Vec3f::new(3.0f32, 3.0f32, 3.0f32));
         assert_eq!(b - c, a);
         c += a;
         assert_eq!(c, b);
